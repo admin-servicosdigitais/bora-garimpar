@@ -1,6 +1,6 @@
 # Job Scraper API (Playwright + LangGraph + FastAPI)
 
-API REST local com pipeline de **3 agentes via LangGraph**:
+API REST local com pipeline de **3 agentes via LangGraph** em arquitetura modular:
 
 1. **Agente de Garimpo (Playwright)**
    - Entra no site de vagas
@@ -14,6 +14,20 @@ API REST local com pipeline de **3 agentes via LangGraph**:
    - Busca no banco vagas com maior aderência ao perfil
 
 ---
+
+## Arquitetura
+
+```text
+app/
+  api/routes.py           # Endpoints HTTP e contratos de entrada/saída
+  agents/                 # Nós do grafo (orquestração por responsabilidade)
+  services/scraper.py     # Coleta Playwright e serialização JSON
+  db.py                   # Persistência SQLite
+  graphs.py               # Construção dos grafos LangGraph
+  schemas.py              # Modelos Pydantic e estado da pipeline
+  utils/                  # Funções utilitárias puras
+main.py                   # Entrypoint compatível (uvicorn main:app)
+```
 
 ## 1) Instalação
 
@@ -35,76 +49,11 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ### `POST /jobs/scrape`
 Scrape direto (modo simples) para um termo.
 
-Payload:
-
-```json
-{
-  "base_url": "https://boards.greenhouse.io/openai",
-  "job_description": "software",
-  "max_jobs": 5
-}
-```
-
 ### `POST /pipeline/ingest`
 Executa os **agentes 1 e 2** via LangGraph.
 
-Payload:
-
-```json
-{
-  "base_url": "https://boards.greenhouse.io/openai",
-  "job_description": "engenheiro de software",
-  "max_jobs": 5,
-  "similar_terms_limit": 4
-}
-```
-
-Resposta (exemplo):
-
-```json
-{
-  "base_url": "https://boards.greenhouse.io/openai",
-  "query": "engenheiro de software",
-  "similar_terms": ["engenheiro de software", "developer", "software engineer", "backend"],
-  "json_files": [
-    "outputs/jobs_boards.greenhouse.io_engenheiro-de-software_20260319T000000Z.json"
-  ],
-  "inserted_rows": 10
-}
-```
-
 ### `POST /pipeline/match`
 Executa o **agente 3** via LangGraph para matching por perfil.
-
-Payload:
-
-```json
-{
-  "profile_text": "Engenheiro backend Python com FastAPI, APIs REST e microsserviços",
-  "limit": 20
-}
-```
-
-Resposta (exemplo):
-
-```json
-{
-  "profile_text": "Engenheiro backend Python com FastAPI, APIs REST e microsserviços",
-  "keywords": ["engenheiro", "backend", "python", "fastapi", "apis", "rest", "microsserviços"],
-  "count": 3,
-  "jobs": [
-    {
-      "id": 10,
-      "url": "https://...",
-      "title": "Backend Python Engineer",
-      "source_query": "engenheiro de software",
-      "similar_term": "backend",
-      "collected_at_utc": "20260319T000000Z",
-      "score": 4
-    }
-  ]
-}
-```
 
 ## 4) Observações
 
