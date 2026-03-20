@@ -70,6 +70,8 @@ async def run_ingestion_pipeline(req: PipelineRequest) -> PipelineResponse:
             "base_url": str(req.base_url),
             "job_description": req.job_description,
             "max_jobs": req.max_jobs,
+            "min_jobs": req.min_jobs,
+            "max_attempts": req.max_attempts,
             "similar_terms_limit": req.similar_terms_limit,
         }
     )

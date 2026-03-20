@@ -8,7 +8,9 @@ from pydantic import BaseModel, Field, HttpUrl
 class ScrapeRequest(BaseModel):
     base_url: HttpUrl = Field(..., description="URL base do site de vagas")
     job_description: str = Field(..., min_length=3, description="Descrição/termo da vaga")
-    max_jobs: int = Field(default=10, ge=1, le=50)
+    max_jobs: int = Field(default=15, ge=1, le=100)
+    min_jobs: int = Field(default=10, ge=1, le=100)
+    max_attempts: int = Field(default=8, ge=1, le=30)
 
 
 class PipelineRequest(ScrapeRequest):
@@ -24,6 +26,7 @@ class JobResult(BaseModel):
     url: str
     title: str
     description: str
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class ScrapeResponse(BaseModel):
@@ -53,6 +56,8 @@ class PipelineState(TypedDict, total=False):
     base_url: str
     job_description: str
     max_jobs: int
+    min_jobs: int
+    max_attempts: int
     similar_terms_limit: int
     profile_text: str
     similar_terms: list[str]
